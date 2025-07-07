@@ -13,7 +13,6 @@ nextflow.preview.recursion=true
 
 process getVersions {
     label "wf_basecalling"
-    cpus 1
     output:
         path "versions.txt"
     script:

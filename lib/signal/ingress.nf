@@ -234,7 +234,7 @@ process split_calls {
     cpus 1
     publishDir "${params.out_dir}/demuxed",
         mode: 'copy',
-        pattern: "demuxed/*.bam",
+        pattern: "demuxed/*",
         saveAs: { fn ->
             if (fn.endsWith("unclassified.bam")) {
                 "unclassified/reads.bam"
@@ -242,22 +242,36 @@ process split_calls {
             else if (fn.endsWith("mixed.bam")) {
                 "mixed/reads.bam"
             }
-            else {
+            else if (fn.endsWith("unclassified.fastq")) {
+                "unclassified/reads.fastq"
+            }
+            else if (fn.endsWith("mixed.fastq")) {
+                "mixed/reads.fastq"
+            }
+            else if (fn.endsWith("fastq")) {
+                "${fn.replace("demuxed/${params.barcode_kit}_","").replace(".fastq","")}/reads.fastq"
+            }
+            else if (fn.endsWith("bam")) {
                 "${fn.replace("demuxed/${params.barcode_kit}_","").replace(".bam","")}/reads.bam"
             }
         }
     input:
-        tuple path(cram), path(crai)
-        tuple path(ref_cache), env(REF_PATH)
+        path(cram)
     output:
-        path("demuxed/*.bam")
+        path("demuxed/*")
     script:
+    if (params.fastq_only) {
+        fastq_str = "--emit-fastq"
+    } else {
+        fastq_str = ""
+    }
+    
     // CW-4509: as described [here](https://github.com/nanoporetech/dorado#Demultiplexing-mapped-reads)
     // to preserve mapping information when demuxing, we need to ask for
     // `--no-trim`. Being aligned, it is also worth ask for it to be sorted/indexed.
-    def is_aligned = params.ref ? "--no-trim --sort-bam" : ""
+    def is_aligned = params.ref ? "--no-trim --sort-bam" : ""    
     """
-    dorado demux --output-dir demuxed ${is_aligned} --no-classify ${cram}
+    dorado demux ${fastq_str} --output-dir demuxed ${is_aligned} --no-classify ${cram}
     """
 }
 

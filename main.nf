@@ -18,6 +18,7 @@ process getVersions {
         path "versions.txt"
     script:
     """
+    export NVIDIA_DISABLE_REQUIRE=1
     dorado --version 2>&1 | head -n1 | sed 's/^/dorado,/' >> versions.txt
     minimap2 --version | head -n 1 | sed 's/^/minimap2,/' >> versions.txt
     """
